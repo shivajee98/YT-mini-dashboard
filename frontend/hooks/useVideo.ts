@@ -27,32 +27,42 @@ export const useVideo = (videoId: string) => {
         }
     };
 
+    // In your useVideo hook
     const updateVideo = async (title: string, description: string) => {
-        if (!title.trim() || !description.trim()) {
-            toast({
-                title: 'Validation Error',
-                description: 'Title and description cannot be empty.',
-                variant: 'destructive'
-            });
-            return false;
-        }
-
         setLoading(true);
         try {
-            await apiService.updateVideo(videoId, title, description);
-            setVideoData(prev => ({ ...prev, title, description }));
-            toast({
-                title: 'Video updated successfully',
-                description: 'Your video title and description have been saved.',
+            const response = await fetch(`http://localhost:3006/api/video/${videoId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ title, description }),
             });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Update failed:', errorData.error);
+                alert(`Failed to update video: ${errorData.error}`);
+                return false;
+            }
+
+            const result = await response.json();
+            console.log('Video updated successfully:', result);
+
+            // Update local state
+            if (videoData) {
+                setVideoData({
+                    ...videoData,
+                    title: title,
+                    description: description
+                });
+            }
+
+            alert('Video updated successfully on YouTube!');
             return true;
         } catch (error) {
             console.error('Error updating video:', error);
-            toast({
-                title: 'Error updating video',
-                description: 'Please try again later.',
-                variant: 'destructive',
-            });
+            alert('Network error while updating video');
             return false;
         } finally {
             setLoading(false);

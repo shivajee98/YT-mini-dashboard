@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:3005/api';
+const BASE_URL = 'http://localhost:3006/api';
 
 export const apiService = {
     // Video operations
@@ -45,8 +45,9 @@ export const apiService = {
         return response.json();
     },
 
-    deleteComment: async (videoId: string, commentId: string) => {
-        const response = await fetch(`${BASE_URL}/comments/${videoId}/${commentId}`, {
+    deleteCommentOrReply: async (id: string, type: 'comment' | 'reply') => {
+        const endpoint = type === 'comment' ? `comments/${id}` : `replies/${id}`;
+        const response = await fetch(`${BASE_URL}/${endpoint}`, {
             method: 'DELETE'
         });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -56,6 +57,72 @@ export const apiService = {
     // Event logs
     getEvents: async () => {
         const response = await fetch(`${BASE_URL}/events`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return response.json();
+    },
+    getNotes: async (videoId: string, filters?: {
+        category?: string;
+        priority?: string;
+        completed?: boolean;
+        search?: string;
+        page?: number;
+        limit?: number;
+    }) => {
+        let url = `${BASE_URL}/notes/${videoId}`;
+
+        if (filters) {
+            const params = new URLSearchParams();
+            Object.entries(filters).forEach(([key, value]) => {
+                if (value !== undefined) params.append(key, value.toString());
+            });
+            if (params.toString()) {
+                url = `${BASE_URL}/notes/${videoId}/filter?${params}`;
+            }
+        }
+
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return response.json();
+    },
+
+    // Notes 
+
+    addNote: async (videoId: string, noteData: {
+        content: string;
+        author?: string;
+        tags?: string[];
+        priority?: string;
+        category?: string;
+    }) => {
+        const response = await fetch(`${BASE_URL}/notes/${videoId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(noteData)
+        });
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return response.json();
+    },
+
+    updateNote: async (noteId: string, updates: {
+        content?: string;
+        tags?: string[];
+        priority?: string;
+        category?: string;
+        completed?: boolean;
+    }) => {
+        const response = await fetch(`${BASE_URL}/notes/${noteId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updates)
+        });
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return response.json();
+    },
+
+    deleteNote: async (noteId: string) => {
+        const response = await fetch(`${BASE_URL}/notes/${noteId}`, {
+            method: 'DELETE'
+        });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         return response.json();
     }

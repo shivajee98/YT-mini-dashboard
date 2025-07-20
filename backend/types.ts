@@ -50,3 +50,43 @@ export interface Reply {
     text: string;
     publishedAt: string;
 }
+
+import { Document } from 'mongoose';
+
+export interface YouTubeInfo {
+    channelId?: string;
+    channelTitle?: string;
+    channelThumbnail?: string;
+    accessToken?: string;
+    refreshToken?: string;
+    tokenExpiresAt?: Date;
+    subscriberCount?: number;
+    videoCount?: number;
+    totalViews?: number;
+}
+
+// types.ts
+export interface IUser extends Document {
+    email: string;
+    username: string;
+    youtube?: {
+        channelId?: string;
+        channelTitle?: string;
+        channelThumbnail?: string;
+        accessToken?: string;
+        refreshToken?: string;
+        tokenExpiresAt?: Date;
+        subscriberCount?: number;
+        videoCount?: number;
+        totalViews?: number;
+    };
+
+    // Method signatures
+    generateAuthToken(): string;
+    generateRefreshToken(): string;
+    updateYouTubeTokens(tokens: any): Promise<void>;
+    getYouTubeTokens(): { access_token?: string; refresh_token?: string; expiry_date?: number } | null;
+    isYouTubeTokenValid(): boolean;
+    hasYouTubeAuth(): boolean;
+    clearYouTubeAuth(): Promise<void>;
+}

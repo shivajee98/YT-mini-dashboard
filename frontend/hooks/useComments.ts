@@ -79,10 +79,10 @@ export const useComments = (videoId: string) => {
         }
     };
 
-    const deleteComment = async (commentId: string) => {
+    const deleteCommentOrReply = async (commentId: string) => {
         setLoading(true);
         try {
-            await apiService.deleteComment(videoId, commentId);
+            await apiService.deleteCommentOrReply(commentId, 'comment');
             setComments(prev => prev.filter(comment => comment.id !== commentId));
             toast({
                 title: 'Comment deleted',
@@ -115,7 +115,7 @@ export const useComments = (videoId: string) => {
         setReplyingTo,
         addComment,
         addReply,
-        deleteComment,
+        deleteCommentOrReply,
         refetchComments: fetchComments
     };
 };
