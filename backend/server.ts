@@ -20,7 +20,7 @@ const PORT = 3005;
 
 // Middleware
 app.use(cors({
-    origin: ['http://localhost:3000', 'http://localhost:3001'],
+    origin: ['http://localhost:3000', 'http://localhost:3001', 'https://yt-mini-dashboard.vercel.app/'],
     credentials: true
 }));
 app.use(express.json());
@@ -109,62 +109,6 @@ app.get('/health', (req: Request, res: Response) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// User registration/login routes
-app.post('/api/auth/register', async (req: Request, res: Response) => {
-    try {
-        const { email, username } = req.body;
-
-        let user = await User.findOne({ $or: [{ email }, { username }] });
-        if (user) {
-            return res.status(400).json({ error: 'User already exists' });
-        }
-
-        user = new User({ email, username });
-        await user.save();
-
-        const token = user.generateAuthToken();
-
-        res.status(201).json({
-            user: {
-                id: user._id,
-                email: user.email,
-                username: user.username,
-                hasYouTubeAuth: user.hasYouTubeAuth()
-            },
-            token
-        });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.post('/api/auth/login', async (req: Request, res: Response) => {
-    try {
-        const { email } = req.body;
-
-        let user = await User.findOne({ email });
-        if (!user) {
-            // Create user if doesn't exist (for development)
-            user = new User({ email, username: email.split('@')[0] });
-            await user.save();
-        }
-
-        const token = user.generateAuthToken();
-
-        res.json({
-            user: {
-                id: user._id,
-                email: user.email,
-                username: user.username,
-                hasYouTubeAuth: user.hasYouTubeAuth()
-            },
-            token
-        });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
 // YouTube OAuth routes
 app.get('/auth/youtube', (req: AuthenticatedRequest, res: Response) => {
     const authUrl = youtubeAuth.getAuthUrl();
@@ -176,7 +120,7 @@ app.get('/auth/callback', async (req, res: Response) => {
         const { code } = req.query;
 
         if (!code) {
-            return res.redirect('http://localhost:3000?auth=error');
+            return res.redirect(`${process.env.BASE_URL}/?auth=error`);
         }
 
         // Get tokens and user info
@@ -222,11 +166,11 @@ app.get('/auth/callback', async (req, res: Response) => {
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
-        res.redirect('http://localhost:3000/videos?auth=success');
+        res.redirect(`${process.env.BASE_URL}/videos?auth=success`);
 
     } catch (error) {
         console.error('OAuth callback error:', error);
-        res.redirect('http://localhost:3000/videos?auth=error');
+        res.redirect(`${process.env.BASE_URL}/?auth=error`);
     }
 });
 

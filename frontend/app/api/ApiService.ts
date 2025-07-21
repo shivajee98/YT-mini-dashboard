@@ -263,7 +263,7 @@ export const handleApiError = (error: unknown, router?: any) => {
             window.location.href = error.authUrl;
         } else if (router) {
             // Redirect to login page
-            router.push('/login');
+            router.push('/auth/youtube');
         }
         return 'Authentication required. Please log in.';
     } else if (error instanceof Error) {

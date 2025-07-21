@@ -10,7 +10,7 @@ class YouTubeAuth {
         return new OAuth2(
             process.env.YOUTUBE_CLIENT_ID,
             process.env.YOUTUBE_CLIENT_SECRET,
-            process.env.YOUTUBE_REDIRECT_URI || 'http://localhost:3005/auth/callback'
+            process.env.YOUTUBE_REDIRECT_URI
         );
     }
 
@@ -25,7 +25,7 @@ class YouTubeAuth {
                 'https://www.googleapis.com/auth/userinfo.profile',
                 'https://www.googleapis.com/auth/userinfo.email'
             ],
-            redirect_uri: process.env.YOUTUBE_REDIRECT_URI || 'http://localhost:3005/auth/callback',
+            redirect_uri: process.env.YOUTUBE_REDIRECT_URI,
             state: userId
         });
     }
