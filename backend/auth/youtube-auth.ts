@@ -16,6 +16,8 @@ class YouTubeAuth {
 
     getAuthUrl() {
         const oauth2Client = this.createOAuth2Client();
+        console.log("at getAuthUrl");
+
         return oauth2Client.generateAuthUrl({
             access_type: 'offline',
             prompt: 'consent',
@@ -38,6 +40,8 @@ class YouTubeAuth {
         const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
         const { data: profile } = await oauth2.userinfo.get();
         let user = await User.findOne({ googleId: profile.id });
+        console.log("At getTokens");
+
         if (user) {
             if (!user.youtube) {
                 user.youtube = {};
@@ -78,7 +82,10 @@ class YouTubeAuth {
         return tokens;
     }
     async getValidAccessToken(id: string) {
+        console.log("at getValidAccessToken 1");
+
         const user = await User.findOne({ id }).select('+youtube.accessToken +youtube.refreshToken');
+        console.log("at getValidAccessToken 2");
         if (!user) throw new Error('User not found');
         const { accessToken, refreshToken } = user.youtube || {};
         if (!refreshToken) {
@@ -87,6 +94,7 @@ class YouTubeAuth {
         const oauth2Client = this.createOAuth2Client();
         oauth2Client.setCredentials({ refresh_token: refreshToken });
         try {
+            console.log("at getValidAccessToken 3");
             const { credentials } = await oauth2Client.refreshAccessToken();
             // Update stored tokens
             await user.updateYouTubeTokens(credentials);
@@ -98,6 +106,8 @@ class YouTubeAuth {
 
     // Helper method to get authenticated YouTube API client for a user
     async getYouTubeClient(userId: string) {
+        console.log(" at getYouTubeClient");
+
         const accessToken = await this.getValidAccessToken(userId);
         const oauth2Client = this.createOAuth2Client();
         oauth2Client.setCredentials({ access_token: accessToken });

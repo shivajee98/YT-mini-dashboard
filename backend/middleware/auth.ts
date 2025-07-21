@@ -8,8 +8,8 @@ export interface AuthenticatedRequest extends Request {
     userId: string;
 }
 
-// Updated authentication middleware
-export function authenticateUser(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+// Updated authentication middleware - Note: req parameter is now Request, not AuthenticatedRequest
+export function authenticateUser(req: Request, res: Response, next: NextFunction) {
     const token = req.cookies.auth_token;
 
     if (!token) {
@@ -20,7 +20,6 @@ export function authenticateUser(req: AuthenticatedRequest, res: Response, next:
     }
 
     try {
-        // Verify and decode the JWT
         const JWT_SECRET = process.env.JWT_SECRET;
         if (!JWT_SECRET) {
             throw new Error('JWT_SECRET not configured');
@@ -28,9 +27,9 @@ export function authenticateUser(req: AuthenticatedRequest, res: Response, next:
 
         const decoded = jwt.verify(token, JWT_SECRET) as any;
 
-        // Set user info from decoded token
-        req.user = decoded;
-        req.userId = decoded.id; // Set userId for convenience
+        // Type assertion to add custom properties
+        (req as AuthenticatedRequest).user = decoded;
+        (req as AuthenticatedRequest).userId = decoded.id;
 
         next();
     } catch (error) {
@@ -42,20 +41,21 @@ export function authenticateUser(req: AuthenticatedRequest, res: Response, next:
     }
 }
 
-// Updated YouTube auth requirement middleware
-export const requireYouTubeAuth = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+// Updated YouTube auth requirement middleware - Note: req parameter is now Request, not AuthenticatedRequest
+export const requireYouTubeAuth = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        if (!req.user) {
+        const authReq = req as AuthenticatedRequest;
+        
+        if (!authReq.user) {
             return res.status(401).json({
                 error: 'Authentication required',
                 authUrl: youtubeAuth.getAuthUrl()
             });
         }
 
-        // Check if user has YouTube auth from the JWT payload
-        if (!req.user.hasYouTubeAuth) {
-            // Optionally fetch fresh user data from database to double-check
-            const user = await User.findById(req.user.userId);
+        // Fix the logic here - check hasYouTubeAuth instead of checking if user exists again
+        if (!authReq.user.hasYouTubeAuth) {
+            const user = await User.findById(authReq.user.userId);
             if (!user) {
                 return res.status(401).json({
                     error: 'YouTube authentication required',

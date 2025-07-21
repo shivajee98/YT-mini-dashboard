@@ -10,6 +10,7 @@ import { authenticateUser, requireYouTubeAuth, type AuthenticatedRequest } from 
 import youtubeAuth from './auth/youtube-auth';
 import cookieParser from 'cookie-parser';
 import jwt from 'jsonwebtoken';
+import { cookies } from 'next/headers';
 declare module 'express-serve-static-core' {
     interface Request {
         userId?: string; // or string if always present
@@ -40,6 +41,9 @@ const makeYouTubeAPICall = async (endpoint: string, userId?: string) => {
 
         if (isAuthenticatedEndpoint) {
             const youtube = await youtubeAuth.getYouTubeClient(userId);
+            console.log(userId);
+            console.log(youtube);
+
 
             if (endpoint.includes('search?')) {
                 const params = new URLSearchParams(endpoint.split('?')[1]);
@@ -82,6 +86,13 @@ const makeYouTubeAPICall = async (endpoint: string, userId?: string) => {
 
             const url = `https://www.googleapis.com/youtube/v3/${endpoint}&key=${process.env.YOUTUBE_API_KEY}`;
             const response = await fetch(url);
+            console.log("At make yt api call");
+            console.log(url);
+
+            console.log(userId);
+
+
+
 
             if (!response.ok) {
                 const errorBody = await response.text();
@@ -91,6 +102,7 @@ const makeYouTubeAPICall = async (endpoint: string, userId?: string) => {
                     url: url.replace(process.env.YOUTUBE_API_KEY, 'API_KEY_HIDDEN'),
                     body: errorBody
                 });
+                console.log("At make yt api call down");
 
                 if (response.status === 403) {
                     throw new Error(`YouTube API 403 Error: Check API key restrictions and quotas. ${errorBody}`);
@@ -114,6 +126,8 @@ app.get('/health', (req: Request, res: Response) => {
 
 // YouTube OAuth routes
 app.get('/auth/youtube', (req, res) => {
+    console.log("at /auth/youtube ");
+
     const authUrl = youtubeAuth.getAuthUrl();
     res.redirect(authUrl);
 });
@@ -128,6 +142,8 @@ app.get('/auth/callback', async (req, res) => {
 
         // Get tokens and user info
         const tokens = await youtubeAuth.getTokens(code as string, req.userId!);
+        console.log(tokens);
+
 
         // Find the user that was just created/updated
         const user = await User.findOne({ 'youtube.accessToken': tokens.access_token });
@@ -260,6 +276,8 @@ app.get('/api/comments/:videoId', async (req: Request, res: Response) => {
 
 // Protected YouTube endpoints (require authentication)
 app.get('/api/user/videos',
+    authenticateUser,
+    requireYouTubeAuth,
     async (req, res) => {
         try {
             console.log(`Fetching videos for user: ${req.userId}`);
@@ -308,6 +326,8 @@ app.get('/api/user/videos',
 );
 
 app.get('/api/user/channel',
+    authenticateUser,
+    requireYouTubeAuth,
     async (req, res) => {
         try {
 
@@ -341,7 +361,7 @@ app.get('/api/user/channel',
 );
 
 // Notes endpoints (require user auth but not YouTube auth)
-app.get('/api/notes/:videoId', async (req, res) => {
+app.get('/api/notes/:videoId', authenticateUser, async (req, res) => {
     try {
         const { videoId } = req.params;
 
@@ -352,7 +372,7 @@ app.get('/api/notes/:videoId', async (req, res) => {
     }
 });
 
-app.post('/api/notes/:videoId', async (req, res) => {
+app.post('/api/notes/:videoId', authenticateUser, async (req, res) => {
     try {
         const { videoId } = req.params;
         const { content, author, tags, priority, category } = req.body;
@@ -387,7 +407,7 @@ app.post('/api/notes/:videoId', async (req, res) => {
     }
 });
 
-app.put('/api/notes/:noteId', async (req, res) => {
+app.put('/api/notes/:noteId', authenticateUser, async (req, res) => {
     try {
         const { noteId } = req.params;
         const { content, tags, priority, category, completed } = req.body;
@@ -409,7 +429,7 @@ app.put('/api/notes/:noteId', async (req, res) => {
     }
 });
 
-app.delete('/api/notes/:noteId', async (req, res) => {
+app.delete('/api/notes/:noteId', authenticateUser, async (req, res) => {
     try {
         const { noteId } = req.params;
 
@@ -433,7 +453,7 @@ app.delete('/api/notes/:noteId', async (req, res) => {
 });
 
 // Get event logs
-app.get('/api/events', async (req, res) => {
+app.get('/api/events', authenticateUser, async (req, res) => {
     const logs = await getAllLogs();
     res.json(logs);
 });
