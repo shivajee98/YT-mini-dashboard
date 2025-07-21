@@ -5,18 +5,17 @@ import youtubeAuth from '../auth/youtube-auth';
 
 export interface AuthenticatedRequest extends Request {
     user?: any;
-    userId?: string;
-    cookies?: string;
+    userId: string;
 }
 
 // Updated authentication middleware
-export function authenticateUser(req, res: Response, next: NextFunction) {
+export function authenticateUser(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     const token = req.cookies.auth_token;
 
     if (!token) {
         return res.status(401).json({
             error: "Unauthorized - No token provided",
-            authUrl: youtubeAuth.getAuthUrl('anonymous') // You might need to adjust this
+            authUrl: youtubeAuth.getAuthUrl()
         });
     }
 
@@ -38,7 +37,7 @@ export function authenticateUser(req, res: Response, next: NextFunction) {
         console.error('JWT verification failed:', error);
         res.status(403).json({
             error: "Forbidden - Invalid token",
-            authUrl: youtubeAuth.getAuthUrl('anonymous')
+            authUrl: youtubeAuth.getAuthUrl()
         });
     }
 }
@@ -49,7 +48,7 @@ export const requireYouTubeAuth = async (req: AuthenticatedRequest, res: Respons
         if (!req.user) {
             return res.status(401).json({
                 error: 'Authentication required',
-                authUrl: youtubeAuth.getAuthUrl('anonymous')
+                authUrl: youtubeAuth.getAuthUrl()
             });
         }
 
@@ -60,13 +59,13 @@ export const requireYouTubeAuth = async (req: AuthenticatedRequest, res: Respons
             if (!user) {
                 return res.status(401).json({
                     error: 'YouTube authentication required',
-                    authUrl: youtubeAuth.getAuthUrl(req.user.userId || 'anonymous')
+                    authUrl: youtubeAuth.getAuthUrl()
                 });
             }
         }
 
         next();
-    } catch (error) {
+    } catch (error: any) {
         console.error('YouTube auth check failed:', error);
         res.status(500).json({
             error: 'Authentication check failed',

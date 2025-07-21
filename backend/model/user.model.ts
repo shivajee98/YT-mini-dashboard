@@ -42,7 +42,7 @@ const userSchema = new Schema<IUser>({
     toJSON: {
         virtuals: true,
         transform(doc, ret) {
-            delete ret.__v;
+            delete (ret as any).__v;
             delete ret.youtube?.accessToken;
             delete ret.youtube?.refreshToken;
             return ret;
@@ -53,14 +53,14 @@ const userSchema = new Schema<IUser>({
 
 // JWT Methods
 userSchema.methods.generateAuthToken = function () {
-    return jwt.sign({
-        userId: this._id,
-        email: this.email,
-        username: this.username
-    }, process.env.JWT_SECRET || 'fallback-secret', {
-        expiresIn: process.env.JWT_EXPIRES_IN || '7d'
-    });
+    const token = jwt.sign(
+        { userId: this._id },
+        process.env.JWT_SECRET!,
+        { expiresIn: '1h' }
+    );
+    return token;
 };
+
 
 userSchema.methods.generateRefreshToken = function () {
     return jwt.sign({

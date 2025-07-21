@@ -14,7 +14,7 @@ class YouTubeAuth {
         );
     }
 
-    getAuthUrl(userId: string) {
+    getAuthUrl() {
         const oauth2Client = this.createOAuth2Client();
         return oauth2Client.generateAuthUrl({
             access_type: 'offline',
@@ -26,7 +26,7 @@ class YouTubeAuth {
                 'https://www.googleapis.com/auth/userinfo.email'
             ],
             redirect_uri: process.env.YOUTUBE_REDIRECT_URI,
-            state: userId
+            state: crypto.randomUUID(), // if running on Node 19+, or use uuid lib
         });
     }
 
@@ -39,8 +39,13 @@ class YouTubeAuth {
         const { data: profile } = await oauth2.userinfo.get();
         let user = await User.findOne({ googleId: profile.id });
         if (user) {
-            user.youtube.accessToken = tokens.access_token
-            user.youtube.refreshToken = tokens.refresh_token
+            if (!user.youtube) {
+                user.youtube = {};
+            }
+
+            user.youtube.accessToken = tokens.access_token ?? undefined;
+            user.youtube.refreshToken = tokens.refresh_token ?? undefined;
+
             await user.save();
         } else {
             // Generate unique username
