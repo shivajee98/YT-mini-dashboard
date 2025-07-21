@@ -1,5 +1,4 @@
-const BASE_URL = 'http://localhost:3005';
-
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3005'
 // Types for better type safety
 interface AuthResponse {
     user: {

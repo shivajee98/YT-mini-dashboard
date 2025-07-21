@@ -30,7 +30,8 @@ export default function YouTubeDashboard() {
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
-        const response = await fetch('http://localhost:3005/api/user/channel');
+        const url = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3005'
+        const response = await fetch(`${url}/api/user/channel`);
         const userData = await response.json();
         setCurrentUser(userData);
       } catch (error) {
@@ -45,7 +46,8 @@ export default function YouTubeDashboard() {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const response = await fetch('http://localhost:3005/auth/status');
+        const url = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3005'
+        const response = await fetch(`${url}/auth/status`);
         const { authenticated } = await response.json();
         setIsAuthenticated(authenticated);
       } catch (error) {

@@ -10,7 +10,7 @@ type Video = {
     thumbnail: string;
 };
 
-const BASE_URL = 'http://localhost:3005/api';
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3005'
 
 export default function VideosPage() {
     const [videos, setVideos] = useState<Video[]>([]);
@@ -21,7 +21,7 @@ export default function VideosPage() {
     useEffect(() => {
         const fetchVideos = async () => {
             try {
-                const res = await fetch(`${BASE_URL}/user/videos`, {
+                const res = await fetch(`${BASE_URL}/api/user/videos`, {
                     method: 'GET',
                     credentials: 'include', // 🔑 This sends cookies!
                     headers: {
