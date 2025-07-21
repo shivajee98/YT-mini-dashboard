@@ -72,30 +72,21 @@ class YouTubeAuth {
         await user.updateYouTubeTokens(tokens);
         return tokens;
     }
-    async getValidAccessToken(userId: string) {
-        const user = await User.findById(userId);
+    async getValidAccessToken(id: string) {
+        const user = await User.findOne({ id }).select('+youtube.accessToken +youtube.refreshToken');
         if (!user) throw new Error('User not found');
-
-        const userTokens = await user.getYouTubeTokens(); // You'll need to implement this
-        if (!userTokens?.refresh_token) {
+        const { accessToken, refreshToken } = user.youtube || {};
+        if (!refreshToken) {
             throw new Error('No refresh token found for user. Re-authentication required.');
         }
-
         const oauth2Client = this.createOAuth2Client();
-        oauth2Client.setCredentials({
-            refresh_token: userTokens.refresh_token,
-            access_token: userTokens.access_token
-        });
-
+        oauth2Client.setCredentials({ refresh_token: refreshToken });
         try {
             const { credentials } = await oauth2Client.refreshAccessToken();
-
-            // Update user's tokens in database
+            // Update stored tokens
             await user.updateYouTubeTokens(credentials);
-
             return credentials.access_token;
         } catch (error) {
-            console.error(`Token refresh failed for user ${userId}:`, error);
             throw new Error('Authentication required - please re-authenticate');
         }
     }

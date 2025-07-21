@@ -29,7 +29,7 @@ export default function VideoDetailPage() {
                 <div className="container mx-auto p-6">
                     <div className="mb-8">
                         <h1 className="text-3xl font-bold text-blue-800 mb-2">
-                            <Link href="/videos" className="hover:underline">
+                            <Link href="/" className="hover:underline">
                                 Video Dashboard
                             </Link>
                         </h1>

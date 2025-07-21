@@ -87,6 +87,6 @@ export interface IUser extends Document {
     updateYouTubeTokens(tokens: any): Promise<void>;
     getYouTubeTokens(): { access_token?: string; refresh_token?: string; expiry_date?: number } | null;
     isYouTubeTokenValid(): boolean;
-    hasYouTubeAuth(): boolean;
+    hasYouTubeAuth(): true;
     clearYouTubeAuth(): Promise<void>;
 }

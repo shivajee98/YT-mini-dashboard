@@ -8,7 +8,6 @@ import { connectToMongoDB } from './db/db';
 import { createLog, getAllLogs } from './controller/log.controller';
 import { authenticateUser, requireYouTubeAuth, type AuthenticatedRequest } from './middleware/auth';
 import youtubeAuth from './auth/youtube-auth';
-import authRoutes from './routes/auth';
 import cookieParser from 'cookie-parser';
 import jwt from 'jsonwebtoken';
 
@@ -37,7 +36,6 @@ const makeYouTubeAPICall = async (endpoint: string, userId?: string) => {
         );
 
         if (isAuthenticatedEndpoint) {
-            console.log(`Using OAuth for authenticated endpoint: ${endpoint}`);
             const youtube = await youtubeAuth.getYouTubeClient(userId);
 
             if (endpoint.includes('search?')) {
@@ -75,9 +73,6 @@ const makeYouTubeAPICall = async (endpoint: string, userId?: string) => {
                 throw new Error(`Unsupported authenticated endpoint: ${endpoint}`);
             }
         } else {
-            // Public endpoints using API key
-            console.log(`Using API key for public endpoint: ${endpoint}`);
-
             if (!process.env.YOUTUBE_API_KEY) {
                 throw new Error('YOUTUBE_API_KEY environment variable is not set');
             }
@@ -188,8 +183,7 @@ app.get('/auth/callback', async (req, res: Response) => {
         const tokens = await youtubeAuth.getTokens(code as string, req.userId);
 
         // Find the user that was just created/updated
-        const user = await User.findOne({ 'youtube.accessToken': tokens.access_token}); // Adjust based on your return structure
-        console.log(user);
+        const user = await User.findOne({ 'youtube.accessToken': tokens.access_token});
         
 
         if (!user) {
@@ -228,11 +222,11 @@ app.get('/auth/callback', async (req, res: Response) => {
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
-        res.redirect('http://localhost:3000?auth=success');
+        res.redirect('http://localhost:3000/videos?auth=success');
 
     } catch (error) {
         console.error('OAuth callback error:', error);
-        res.redirect('http://localhost:3000?auth=error');
+        res.redirect('http://localhost:3000/videos?auth=error');
     }
 });
 
@@ -253,7 +247,6 @@ app.get('/api/video/:videoId', async (req: Request, res: Response) => {
             return res.status(400).json({ error: 'Video ID is required' });
         }
 
-        console.log(`Fetching video data for ID: ${videoId}`);
 
         const data = await makeYouTubeAPICall(`videos?part=snippet,statistics,contentDetails&id=${videoId}`);
         const video: YouTubeVideo = data.items?.[0];
@@ -289,7 +282,6 @@ app.get('/api/video/:videoId', async (req: Request, res: Response) => {
 app.get('/api/comments/:videoId', async (req: Request, res: Response) => {
     try {
         const { videoId } = req.params;
-        console.log(`Fetching comments for video: ${videoId}`);
 
         const data = await makeYouTubeAPICall(`commentThreads?part=snippet,replies&videoId=${videoId}&order=time&maxResults=50`);
 
@@ -316,7 +308,6 @@ app.get('/api/comments/:videoId', async (req: Request, res: Response) => {
             };
         }) || [];
 
-        console.log(`Found ${comments.length} comments for video ${videoId}`);
         res.json(comments);
 
     } catch (error) {
@@ -352,7 +343,6 @@ app.get('/api/user/videos',
                 channelTitle: item.snippet.channelTitle
             })) || [];
 
-            console.log(`Found ${videos.length} videos for user ${req.userId}`);
 
             res.json({
                 videos,
@@ -381,7 +371,6 @@ app.get('/api/user/channel',
     requireYouTubeAuth,
     async (req: AuthenticatedRequest, res: Response) => {
         try {
-            console.log(`Fetching channel for user: ${req.userId}`);
 
             const data = await makeYouTubeAPICall('channels?part=snippet&mine=true', req.userId);
             const channel = data.items?.[0];
@@ -394,13 +383,11 @@ app.get('/api/user/channel',
                     thumbnailUrl: channel.snippet.thumbnails?.default?.url
                 };
 
-                console.log('Current user channel:', channelInfo);
                 res.json(channelInfo);
             } else {
                 res.status(404).json({ error: 'Channel not found' });
             }
         } catch (error) {
-            console.error('Error fetching channel:', error);
 
             if (error.message.includes('Authentication required')) {
                 return res.status(401).json({
@@ -418,12 +405,10 @@ app.get('/api/user/channel',
 app.get('/api/notes/:videoId', authenticateUser, async (req: AuthenticatedRequest, res: Response) => {
     try {
         const { videoId } = req.params;
-        console.log(`Fetching notes for video ${videoId}`);
 
         const notes = await Note.find({ videoId, userId: req.userId });
         res.json(notes);
     } catch (error) {
-        console.error('Error fetching notes:', error);
         res.status(500).json({ error: 'Failed to fetch notes' });
     }
 });
@@ -456,7 +441,6 @@ app.post('/api/notes/:videoId', authenticateUser, async (req: AuthenticatedReque
             details: `Added note for video ${videoId}`
         });
 
-        console.log(`✅ Note added for video ${videoId}`);
         res.status(201).json(savedNote);
     } catch (error) {
         console.error('Error adding note:', error);
@@ -503,10 +487,8 @@ app.delete('/api/notes/:noteId', authenticateUser, async (req: AuthenticatedRequ
             details: `Deleted note ${noteId}`
         });
 
-        console.log(`✅ Note ${noteId} deleted successfully`);
         res.json({ message: 'Note deleted successfully' });
     } catch (error) {
-        console.error('Error deleting note:', error);
         res.status(500).json({ error: 'Failed to delete note' });
     }
 });

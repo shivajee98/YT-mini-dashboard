@@ -4,49 +4,56 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-// Define a basic video type
 type Video = {
     id: string;
     title: string;
     thumbnail: string;
 };
 
-const BASE_URL = 'http://localhost:3006/api';
+const BASE_URL = 'http://localhost:3005/api';
 
 export default function VideosPage() {
     const [videos, setVideos] = useState<Video[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const router = useRouter();
 
     useEffect(() => {
         const fetchVideos = async () => {
             try {
-                const res = await fetch(`${BASE_URL}/user/videos`);
+                const res = await fetch(`${BASE_URL}/user/videos`, {
+                    method: 'GET',
+                    credentials: 'include', // 🔑 This sends cookies!
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
 
                 if (!res.ok) {
-                    throw new Error(`HTTP error! status: ${res.status}`);
+                    const errorData = await res.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${res.status}`);
                 }
 
                 const data = await res.json();
-                console.log('API Response:', data); // Debug log
+                console.log('API Response:', data);
 
-                // Use data.videos instead of data.items
                 const mappedVideos = data.videos?.map((item: any) => ({
                     id: item.id,
                     title: item.title,
-                    thumbnail: item.thumbnailUrl, // Note: changed from thumbnails.medium.url
+                    thumbnail: item.thumbnailUrl,
                 })) || [];
 
                 setVideos(mappedVideos);
             } catch (err) {
                 console.error("Failed to fetch videos:", err);
+                setError(err instanceof Error ? err.message : 'Unknown error');
             } finally {
                 setLoading(false);
             }
         };
 
         fetchVideos();
-    }, []);
+    }, [router]);
 
     if (loading) {
         return (
@@ -56,10 +63,34 @@ export default function VideosPage() {
         );
     }
 
+    if (error) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+                <div className="text-center">
+                    <p className="text-red-400 mb-4">Error: {error}</p>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700"
+                    >
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     if (videos.length === 0) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
-                <p>No videos found.</p>
+                <div className="text-center">
+                    <p className="mb-4">No videos found.</p>
+                    <button
+                        onClick={() => router.push('/auth/youtube')}
+                        className="bg-red-600 px-4 py-2 rounded hover:bg-red-700"
+                    >
+                        Connect YouTube
+                    </button>
+                </div>
             </div>
         );
     }
@@ -75,7 +106,7 @@ export default function VideosPage() {
                     <div
                         key={video.id}
                         className="bg-gray-800 rounded-lg overflow-hidden shadow-md cursor-pointer hover:scale-[1.02] hover:shadow-lg transition"
-                        onClick={() => router.push(`/video/${video.id}`)} // Fixed route
+                        onClick={() => router.push(`/video/${video.id}`)}
                     >
                         <Image
                             src={video.thumbnail}

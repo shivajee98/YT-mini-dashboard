@@ -45,13 +45,6 @@ export async function PUT(request: NextRequest, { params }: { params: { videoId:
     const { videoId } = params
     const { title, description } = await request.json()
 
-    // In real implementation, call YouTube Data API v3
-    // const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&key=${process.env.YOUTUBE_API_KEY}`, {
-    //   method: 'PUT',
-    //   headers: { 'Authorization': `Bearer ${accessToken}` },
-    //   body: JSON.stringify({ id: videoId, snippet: { title, description } })
-    // })
-
     // Log the event
     await fetch("/api/events", {
       method: "POST",

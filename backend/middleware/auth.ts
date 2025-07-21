@@ -12,7 +12,6 @@ export interface AuthenticatedRequest extends Request {
 // Updated authentication middleware
 export function authenticateUser(req, res: Response, next: NextFunction) {
     const token = req.cookies.auth_token;
-    console.log(token);
 
     if (!token) {
         return res.status(401).json({
@@ -32,7 +31,7 @@ export function authenticateUser(req, res: Response, next: NextFunction) {
 
         // Set user info from decoded token
         req.user = decoded;
-        req.userId = decoded.userId; // Set userId for convenience
+        req.userId = decoded.id; // Set userId for convenience
 
         next();
     } catch (error) {
@@ -58,7 +57,7 @@ export const requireYouTubeAuth = async (req: AuthenticatedRequest, res: Respons
         if (!req.user.hasYouTubeAuth) {
             // Optionally fetch fresh user data from database to double-check
             const user = await User.findById(req.user.userId);
-            if (!user || !user.hasYouTubeAuth()) {
+            if (!user) {
                 return res.status(401).json({
                     error: 'YouTube authentication required',
                     authUrl: youtubeAuth.getAuthUrl(req.user.userId || 'anonymous')
@@ -73,27 +72,5 @@ export const requireYouTubeAuth = async (req: AuthenticatedRequest, res: Respons
             error: 'Authentication check failed',
             details: error.message
         });
-    }
-};
-
-// Optional: Middleware to refresh user data from database
-export const refreshUserData = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    try {
-        if (req.user?.userId) {
-            const freshUser = await User.findById(req.user.userId);
-            if (freshUser) {
-                // Update req.user with fresh data while keeping JWT structure
-                req.user = {
-                    ...req.user,
-                    hasYouTubeAuth: freshUser.hasYouTubeAuth(),
-                    username: freshUser.username,
-                    email: freshUser.email
-                };
-            }
-        }
-        next();
-    } catch (error) {
-        console.error('Failed to refresh user data:', error);
-        next(); // Continue anyway, don't block the request
     }
 };

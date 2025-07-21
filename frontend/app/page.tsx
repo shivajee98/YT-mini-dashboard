@@ -2,22 +2,11 @@
 
 import { useEffect, useState } from "react";
 import {
-  Tabs,
-  TabsList,
-  TabsTrigger
-} from "@/components/ui/tabs";
-import {
   User,
 } from "lucide-react";
 
 import HomePage from "./home/page";
-import VideosPage from "./videos/page";
-import Logs from "./logs/page";
-import Overview from "./overview/page";
-import EditVideo from "./edit/page";
-import Comments from "./comments/page";
-import Notes from "./notes/page";
-import { TabsContent } from "@radix-ui/react-tabs";
+
 
 // Define a type for the user object for better type safety
 interface User {
@@ -41,7 +30,7 @@ export default function YouTubeDashboard() {
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
-        const response = await fetch('http://localhost:3006/api/user/channel');
+        const response = await fetch('http://localhost:3005/api/user/channel');
         const userData = await response.json();
         setCurrentUser(userData);
       } catch (error) {
@@ -56,7 +45,7 @@ export default function YouTubeDashboard() {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const response = await fetch('http://localhost:3006/auth/status');
+        const response = await fetch('http://localhost:3005/auth/status');
         const { authenticated } = await response.json();
         setIsAuthenticated(authenticated);
       } catch (error) {
@@ -77,7 +66,6 @@ export default function YouTubeDashboard() {
             <p className="text-muted-foreground">Manage your video content and engagement</p>
           </div>
           <HomePage />
-          <VideosPage />
         </div>
       </div>
     </>
