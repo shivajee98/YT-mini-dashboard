@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { apiService } from '../app/api/ApiService';

@@ -1,14 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server"
 
-// In real implementation, use your preferred database (PostgreSQL, MongoDB, etc.)
 let notesStore: any[] = []
 
 export async function GET(request: NextRequest, { params }: { params: { videoId: string } }) {
   try {
     const { videoId } = params
-
-    // In real implementation, query your database
-    // const notes = await db.notes.findMany({ where: { videoId } })
 
     const notes = notesStore.filter((note) => note.videoId === videoId)
 
@@ -29,9 +25,6 @@ export async function POST(request: NextRequest, { params }: { params: { videoId
       content,
       createdAt: new Date().toISOString(),
     }
-
-    // In real implementation, save to your database
-    // const savedNote = await db.notes.create({ data: note })
 
     notesStore.push(note)
 
@@ -57,8 +50,6 @@ export async function DELETE(request: NextRequest, { params }: { params: { video
     const { searchParams } = new URL(request.url)
     const noteId = searchParams.get("noteId")
 
-    // In real implementation, delete from your database
-    // await db.notes.delete({ where: { id: noteId } })
 
     notesStore = notesStore.filter((note) => note.id !== noteId)
 
