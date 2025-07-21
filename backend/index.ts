@@ -20,7 +20,7 @@ declare module 'express-serve-static-core' {
 dotenv.config();
 
 const app = express();
-const PORT = 3005;
+const PORT = 10000;
 
 // Middleware
 app.use(cors({
