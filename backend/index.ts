@@ -20,7 +20,6 @@ declare module 'express-serve-static-core' {
 dotenv.config();
 
 const app = express();
-const PORT = 10000;
 
 // Middleware
 app.use(cors({
@@ -439,12 +438,14 @@ app.get('/api/events', async (req, res) => {
     res.json(logs);
 });
 
+const PORT = Number(process.env.PORT) || 10000;
+
 const startServer = async () => {
     try {
         await connectToMongoDB();
         console.log('✅ Connected to MongoDB');
 
-        app.listen(PORT, () => {
+        app.listen(PORT, '0.0.0.0', () => {
             console.log(`🚀 Server running on http://localhost:${PORT}`);
             console.log(`📊 Health check: http://localhost:${PORT}/health`);
             console.log(`🎥 Video endpoint: http://localhost:${PORT}/api/video/:videoId`);
