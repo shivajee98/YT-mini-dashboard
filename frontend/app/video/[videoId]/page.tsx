@@ -1,23 +1,21 @@
 "use client"
 
-import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import {
     Tabs,
     TabsList,
-    TabsTrigger
+    TabsTrigger,
+    TabsContent
 } from "@/components/ui/tabs";
-
-import { TabsContent } from "@radix-ui/react-tabs";
-
-// Create a context to share video ID across components
-import { VideoProvider } from "./VideoContext";
-import Overview from "@/app/overview/page";
-import EditVideo from "@/app/edit/page";
-import Comments from "@/app/comments/page";
-import Notes from "@/app/notes/page";
-import Logs from "@/app/logs/page";
 import Link from "next/link";
+
+// Import components, not page files
+import { VideoProvider } from "./VideoContext";
+import Overview from "@/components/VideoTabs/OverView";
+import EditVideo from "@/components/VideoTabs/EditVideo";
+import Comments from "@/components/VideoTabs/Comments";
+import Notes from "@/components/VideoTabs/Notes";
+import Logs from "@/components/VideoTabs/Logs";
 
 export default function VideoDetailPage() {
     const params = useParams();
@@ -33,7 +31,7 @@ export default function VideoDetailPage() {
                                 Video Dashboard
                             </Link>
                         </h1>
-                            <p className="text-muted-foreground">Manage your video content and engagement</p>
+                        <p className="text-muted-foreground">Manage your video content and engagement</p>
                     </div>
 
                     <Tabs defaultValue="overview" className="space-y-6">
